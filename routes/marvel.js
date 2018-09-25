@@ -14,6 +14,8 @@ router.get('/characters', function(req, res, next) {
         if (!error && response.statusCode == 200) {
             var characters = JSON.parse(body).data.results;
             for(var i = 0; i < characters.length; i++){
+                characters[i].flipped = false;
+                characters[i].guess = false;
                 characters[i].primary = true;
                 // Removing the object if it doesn't have image
                 if((characters[i].thumbnail.path).indexOf("image_not_available") > -1){
@@ -21,7 +23,7 @@ router.get('/characters', function(req, res, next) {
                 }
             }
             // Creating the other pairs
-            var secondaryCharacters = characters;
+            var secondaryCharacters = JSON.parse(JSON.stringify(characters));
             for(var i = 0; i < secondaryCharacters.length; i++) {
                 secondaryCharacters[i].primary = false;
             }

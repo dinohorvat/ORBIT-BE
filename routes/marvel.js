@@ -6,6 +6,19 @@ var ts = "1";
 var hash = "9c5f4965a592f3a4a3cca6d6e94405de";
 var environment = "https://gateway.marvel.com";
 
+var mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost/marvel');
+var Leaderboard = mongoose.model('Leaderboard', { name: String, score: Number });
+
+router.post('/leaderboard', function(req, res) {
+    var member = new Leaderboard(req.body);
+    member.save().then((response) => res.send(response));
+});
+router.get('/leaderboard', function(req, res, next) {
+    Leaderboard.find({}).sort( { score: 1 }).limit(10).then((response) => {
+        res.send(response);
+    });
+});
 /* GET characters listing. */
 router.get('/characters', function(req, res, next) {
     request({
@@ -14,13 +27,14 @@ router.get('/characters', function(req, res, next) {
         if (!error && response.statusCode == 200) {
             var characters = JSON.parse(body).data.results;
             for(var i = 0; i < characters.length; i++){
+                // Removing the object if it doesn't have image
+                if((characters[i].thumbnail.path).indexOf("image_not_available") > -1){
+                    console.log(characters[i]);
+                    characters.splice(i, 1);
+                }
                 characters[i].flipped = false;
                 characters[i].guess = false;
                 characters[i].primary = true;
-                // Removing the object if it doesn't have image
-                if((characters[i].thumbnail.path).indexOf("image_not_available") > -1){
-                    characters.splice(i, 1);
-                }
             }
             // Creating the other pairs
             var secondaryCharacters = JSON.parse(JSON.stringify(characters));
@@ -35,6 +49,7 @@ router.get('/characters', function(req, res, next) {
         }
     })
 });
+
 
 /**
  * Randomize array element order in-place.
